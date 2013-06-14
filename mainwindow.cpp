@@ -14,25 +14,23 @@ MainWindow::MainWindow( QWidget *parent ) :
 {
     ui->setupUi( this );
 
-    changedAlgorithm();
-    hide();
-    aboutabout();
-
-    connect(ui->pushButtonOpenInput,    SIGNAL( clicked() ),                        SLOT( openInput() ));
-
-    connect(ui->pushButtonOpenOutput,   SIGNAL( clicked() ),                        SLOT( openOutput() ));
-
-    connect(ui->pushButtonEncrypt,      SIGNAL( clicked() ),                        SLOT( encrypt() ));
+    display();
+    connect(ui->pushFile, SIGNAL( clicked() ), SLOT( openInput() ));
+    connect(ui->pushMD5, SIGNAL( clicked() ), SLOT( clickedMD5() ));
+    connect(ui->pushSHA1, SIGNAL( clicked() ), SLOT( clickedSha1() ));
+    connect(ui->push160, SIGNAL( clicked() ), SLOT( clickedRipemd160() ));
+}
 
 
-
-    connect(ui->pushButtonDisplay,      SIGNAL( clicked() ),                        SLOT( display() ));
-    //connect(ui->pushButtonHide,         SIGNAL( clicked() ),                        SLOT( hide() ));
-    //connect(ui->pushButtonAbout,        SIGNAL( clicked() ),                        SLOT( aboutabout() ));
-    connect(ui->pushButtonFileInput,    SIGNAL( clicked() ),                        SLOT( claerInput() ));
-    connect(ui->pushButtonFileOutput,   SIGNAL( clicked() ),                        SLOT( claerOutput() ));
-    connect(ui->comboBoxAlgorithm,      SIGNAL( currentIndexChanged( QString )),    SLOT( changedAlgorithm() ));
-
+void MainWindow::display()
+{
+    ui->pushFile->setVisible( true );
+    ui->lineEdit->setVisible( false );
+    ui->label->setVisible( false );
+    ui->pushMD5->setVisible( false );
+    ui->pushSHA1->setVisible( false );
+    ui->push160->setVisible( false );
+    ui->textBrowser->setVisible( false );
 
 }
 
@@ -40,168 +38,62 @@ MainWindow::MainWindow( QWidget *parent ) :
 
 void MainWindow::openInput()
 {
-    QString str = QFileDialog::getOpenFileName( this, QString::fromLocal8Bit( "Открыть файл с данныими" ) );
+    QString str = QFileDialog::getOpenFileName( this, QString::fromLocal8Bit( "Выберите файл с данными" ) );
     if ( !str.isEmpty() ) {
-        ui->lineEditInputFile->setText( str );
-        str = FileToQString( str );
-        ui->textEditInput->setText( QString::fromLocal8Bit( QStringToCharStr( str ), str.size() ) );
+        ui->lineEdit->setText( str );
+
+        ui->lineEdit->setText( QString::fromLocal8Bit( QStringToCharStr( str ), str.size() ) );
+        ui->lineEdit->setVisible( true );
+        ui->label->setVisible( true );
+        ui->pushMD5->setVisible( true );
+        ui->pushSHA1->setVisible( true );
+        ui->push160->setVisible( true );
     }
 }
 
 
-
-void MainWindow::openOutput()
+void MainWindow::clickedMD5()
 {
-    QString str = QFileDialog::getOpenFileName( this, QString::fromLocal8Bit( "Открыть файл для результата" ) );
-    if ( !str.isEmpty() ) {
-        ui->lineEditOutputFile->setText( str );
-    }
-}
-
-void MainWindow::display()
-{
-
-
-
-
-    // display
-    ui->pushButtonDisplay->     setVisible( false );
-    //ui->pushButtonHide->        setVisible( true );
-
-    // about
-    //ui->pushButtonAbout->       setVisible( false );
-    //ui->textEditAbout->         setVisible( false );
-    // input
-    //ui->pushButtonInput->       setVisible( true );
-    ui->textEditInput->         setVisible( true );
-    // output
-    //ui->pushButtonOutput->      setVisible( true );
-    ui->textEditOutput->        setVisible( true );
-
-    QString algorithm = ui->comboBoxAlgorithm->currentText();
-    QString mode;
-    about();
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-void MainWindow::hide()
-{
-    ui->pushButtonDisplay-> setVisible( true );
-    //ui->pushButtonHide->    setVisible( false );
-    //ui->pushButtonAbout->   setVisible( true );
-    //ui->textEditAbout->     setVisible( true );
-    //ui->pushButtonInput->   setVisible( false );
-    ui->textEditInput->     setVisible( false );
-    //ui->pushButtonOutput->  setVisible( false );
-    ui->textEditOutput->    setVisible( false );
-}
-
-void MainWindow::changedAlgorithm()
-{
-    bool flag = ui->pushButtonDisplay->isVisible();
-    display();
-    if ( flag ) {
-        hide();
-    }
-}
-
-void MainWindow::encrypt()
-{
-    QString algorithm = ui->comboBoxAlgorithm->currentText();
-    QString mode;
-    QString filenameInput = ui->lineEditInputFile->text();
-    QString filenameOutput = ui->lineEditOutputFile->text();
+    ui->textBrowser->setVisible( true );
     QString str;
-    if ( filenameInput.isEmpty() ) {
-        QMessageBox::information(this, QString::fromLocal8Bit("Ошибка"), QString::fromLocal8Bit("Не задан файл с данными"));
-        return;
-    }
-    if ( filenameOutput.isEmpty() ) {
-        QMessageBox::information(this, QString::fromLocal8Bit("Ошибка"), QString::fromLocal8Bit("Не задан файл для результата"));
-        return;
-    }
+    str = MD5( ui->lineEdit->text());
 
+    ui->textBrowser->setText( str );
+}
 
+void MainWindow::clickedSha1()
+{
+    ui->textBrowser->setVisible( true );
+    QString str;
+    str = Sha1( ui->lineEdit->text());
 
-
-    if ( algorithm == "MD5" )         MD5           ( filenameInput, filenameOutput );
-
-
-    if ( algorithm == "SHA1" )        SHA1        ( filenameInput, filenameOutput );
-
-
-
-
-    if ( algorithm == "RIPEMD" )      RIPEMD      ( filenameInput, filenameOutput );
-
-
-
-    if (algorithm == "SHA1")
-             ui->textEditOutput->setText( FileToQString(filenameOutput) );
-         else
-             ui->textEditOutput->setText( FileToQString16( filenameOutput ));
-
-
+    ui->textBrowser->setText( str );
 
 }
 
-
-
-
-
-
-
-void MainWindow::about()
+void MainWindow::clickedRipemd160()
 {
-    QString algorithm = ui->comboBoxAlgorithm->currentText();
-    QFile file( "about/" + algorithm + ".txt" );
-    file.open( QIODevice::ReadOnly );
-    QString str = file.readAll().constData();
-    file.close();
-    //ui->textEditAbout->setText( QString::fromLocal8Bit( QStringToCharStr( str ), str.size() ));
-}
+    ui->textBrowser->setVisible( true );
+    QString str;
+    str = Ripemd160( ui->lineEdit->text());
 
-void MainWindow::aboutabout()
-{
-    QFile file( "about/about.txt" );
-    file.open( QIODevice::ReadOnly );
-    QString str = file.readAll().constData();
-    file.close();
-    //ui->textEditAbout->setText( QString::fromLocal8Bit( QStringToCharStr( str ), str.size() ));
-}
+    ui->textBrowser->setText( str );
 
-void MainWindow::claerInput()
-{
-    ui->lineEditInputFile-> setText( "" );
-    ui->textEditInput->     setText( "" );
-}
-
-void MainWindow::claerOutput()
-{
-    ui->lineEditOutputFile->    setText( "" );
-    ui->textEditOutput->        setText( "" );
-}
-
-
-
-
-
-void MainWindow::update()
-{
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
+
+
+
+
+
+
+
+
+
+

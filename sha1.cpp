@@ -1,176 +1,167 @@
 #include "sha1.h"
 
-//Основная функция SHA1
-string SHA1_MAIN(string text)
+unsigned int shl(unsigned int a, unsigned int s)
 {
-        unsigned int i, k; // Счетчики для циклов
-         unsigned int h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
-         //unsigned int h0 = 1732584193, h1 = 4023233417, h2 = 2562383102, h3 = 271733878, h4 = 3285377520; // начальные значения переменных для работы алгоритма
-         // 32-х битовые переменные
-
-         unsigned int K1 = 0x5A827999, K2 = 0x6ED9EBA1, K3 = 0x8F1BBCDC, K4 = 0xCA62C1D6; // Константы для работы алгоритма
-        //unsigned int K1 = 1518500249, K2 = 1859775393, K3 = 2400959708, K4 = 3395469782; // Константы для работы алгоритма
-
-        unsigned int a, b, c, d, e; // Переменные для хеш-значений каждой части
-        unsigned int t, f, K; // переменные для обозначения функции f, констант к
-        unsigned long L; // длина сообщения в битах
-        unsigned long temp; // временная переменная
-        unsigned char *Stream = new unsigned char[64]; // само сообщение
-        unsigned int *W = new unsigned int[80]; // Массив 32-битных слов
-
-        // задаем значение длины сообщения. Размер текста смещаем на 3 позиции
-        L = (unsigned long)(text.size() << 3); // целое 62-битное число в битах
-
-        // Последний блок дополняется нулями до длины, кратной 512 бит
-        // добавляем бит "1" в конец сообщения
-        text += (unsigned char) 128;
-        temp = text.size() % 64;
-        // Если последний блок имеет длину более 448, но менее 512 бит
-        if (temp > 56) // 512 - 448 = 64
-        {
-                text.resize(text.size()+(64-temp));
-                // добавляем нули вплоть до конца 512-битного блока
-                for (i=temp; i<text.size(); i++)
-                        text[i] = 0;
-// после этого создается ещё один 512-битный блок, который заполняется вплоть до 448 бит нулями
-// в оставшиея 64 дописывается длина исходного сообщения в битах
-        }
-        // добавляем нули, чтобы длина блока стала равной (512 - 64 = 448) бит.
-
-        temp = text.size();
-        text.resize(text.size() + (56 - (text.size() % 64)));
-        for (i=temp; i<text.size(); i++)
-                text[i] = 0;
-
-// после чего в оставшиеся 64 бита записывается длина исходного сообщения в битах
-        temp = text.size();
-        text.resize(text.size()+8);
-// Добавляем длину исходного сообщения (до предварительной обработки) как целое 64-битное Big-endian (от старшего к младшему) число, в битах
-        for (i=text.size()-1; i>=temp; i--)
-        {
-                if (L > 0)
-                {
-                        text[i] = (unsigned char)L;
-                        L >>= 8;
-                }
-                else
-                        text[i] = 0;
-        }
-
-        for (i=0; i<text.size(); i+=64)
-        {
-                // Выделили блок сообщения 512 бит
-                for (k=0; k<64; k++) // записываем его в текущую переменную stream
-                        Stream[k] = (unsigned char) text[k+i];
-
-                //Формирование массива 32-битных слов
-                // при 0<=k<=15 W[k] = равен исходному сообщению
-                for(k = 0; k < 16; k++)
-                {
-                        W[k] = ((unsigned int) Stream[k * 4]) << 24;
-                        W[k] |= ((unsigned int) Stream[k * 4 + 1]) << 16;
-                        W[k] |= ((unsigned int) Stream[k * 4 + 2]) << 8;
-                        W[k] |= ((unsigned int) Stream[k * 4 + 3]);
-                }
-
-                // при 16<=k<=79
-                for (k=16; k<80; k++)
-                        W[k] = SHA1CircularShift((W[k-3] ^ W[k-8] ^ W[k-14] ^ W[k-16]), 1); // ^ - xor (исключающее ИЛИ)
-
-                // Инициализация хеш-значений этой части
-                a = h0;
-                b = h1;
-                c = h2;
-                d = h3;
-                e = h4;
-
-//***** Основной цикл *********
-                for (k=0; k<80; k++)
-                {
-                        if (k >=0 && k < 20)
-                        {
-// функция раз
-                                f = (b & c) | ((~b) & d);
-
-                                K = K1;
-                        }
-                        else if (k >=20 && k < 40)
-                        {
-// функция два
-                                f = b ^ c ^ d;
-                                K = K2;
-                        }
-                        else if (k >=40 && k < 60)
-                        {
-// функция три
-                                f = (b & c) | (b & d) | (c & d);
-                                K = K3;
-                        }
-                        else if (k >=60 && k < 80)
-                        {
-// функция четыре
-                                f = b ^ c ^ d;
-                                K = K4;
-                        }
-// temp = (a leftrotate 5) + f + e + k + w[i]
-//t = (a << 5) + f + e + K + W[k];
-                        t = SHA1CircularShift(a, 5) + f + e + K + W[k];
-                        e = d;
-                        d = c;
-// c = b leftrotate 30
-//c = b << 30;
-                        c = SHA1CircularShift(b, 30);
-                        b = a;
-                        a = t;
-                }
-
-// Добавляем хеш-значение этой части к результату:
-                h0 = h0 + a;
-                h1 = h1 + b;
-                h2 = h2 + c;
-                h3 = h3 + d;
-                h4 = h4 + e;
-        }
-
-// Итоговое хеш-значение:
-        string str = SHA1IntToHex(h0) + SHA1IntToHex(h1) + SHA1IntToHex(h2) + SHA1IntToHex(h3) + SHA1IntToHex(h4);
-        return str;
+    return ((a<<s)|(a>>(32-s)));
 }
 
-// << циклический сдвиг
-unsigned int SHA1CircularShift(unsigned int X, int s)
+void hash_one(unsigned int *W, unsigned int &H0, unsigned int &H1,
+                unsigned int &H2, unsigned int &H3, unsigned int &H4)
 {
-        return (X << s) | (X >> (32-s));
+    //Вспомогательные переменные
+    unsigned int a, b, c, d, e, f, k, temp;
+
+    //Псевдокод from ru.wikipedia.org/wiki/SHA-1
+    for(int i = 16; i < 80; i++) {
+        W[i] = shl((W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16]), 1);
+    }
+
+    a = H0;
+    b = H1;
+    c = H2;
+    d = H3;
+    e = H4;
+
+    for(int i = 0; i < 80; i++) {
+        if (i >= 0 && i < 20) {
+            f = (b & c) | ((~ b) & d);
+            k = 0x5A827999;
+        }
+        else if (i >= 20 && i < 40) {
+            f = b ^ c ^ d;
+            k = 0x6ED9EBA1;
+        }
+        else if (i >= 40 && i < 60) {
+            f = (b & c) | (b & d) | (c & d);
+            k = 0x8F1BBCDC;
+        }
+        else if (i >= 60 && i < 80) {
+            f = b ^ c ^ d;
+            k = 0xCA62C1D6;
+        }
+
+        temp = shl(a, 5) + f + e + k + W[i];
+        e = d;
+        d = c;
+        c = shl(b, 30);
+        b = a;
+        a = temp;
+    }
+    H0 += a;
+    H1 += b;
+    H2 += c;
+    H3 += d;
+    H4 += e;
 }
 
-// перевод в шестнадцатеричную систему
-string SHA1IntToHex(unsigned int A)
+QString sha1(char *name)
 {
-        string str = ""; // строка для записи результата
-        unsigned char *Temp = new unsigned char[8]; // вспомогательная переменная
-        unsigned char i; // счетчик для цикла
-        unsigned int t; // вспомогательная переменная
+    //Открываем файл
+    QFile file(name);
+    file.open(QIODevice::ReadWrite);
 
-        // перевод из десятичной системы в шестнадцатеричную
-        for (i = 0; i < 8; i += 2, A >>= 8)
+    //Запоминаем размер файла
+    qint64 file_size = file.size();
+    file.close();
+
+    //Считаем сколько сколько байт дописать
+    int last_size = file_size % SIZE_OF_BLOCK;
+
+    int zero_size;
+    if (last_size < 56) zero_size = 56 - last_size;
+    else zero_size = SIZE_OF_BLOCK - last_size + 56;
+
+   //Считаем количество блоков
+    qint64 num_of_blocks = (file_size + zero_size + 8) / SIZE_OF_BLOCK;
+
+    //Сколько последних блоков должны быть модифицированы
+    int blocks_mod = 1;
+    if (last_size >= 56)
+        blocks_mod++;
+
+    //Начинаем преобразования
+
+    //Начальные значения констант
+    unsigned int H0 = 0x67452301;
+    unsigned int H1 = 0xefcdab89;
+    unsigned int H2 = 0x98badcfe;
+    unsigned int H3 = 0x10325476;
+    unsigned int H4 = 0xc3d2e1f0;
+
+    //Читаем из файла блоками по 64 байта
+    FILE *ff = fopen(name, "rb");
+    unsigned int R[80];
+    unsigned char b[64];
+    for(qint64 i = 0; i < num_of_blocks - blocks_mod; i++)
+    {
+        //Считываем 16 4-х байтовых чисел в первые 16 элементов массива R
+        fread(b, 1, 64, ff);
+        for(int j = 0; j < 16; j++)
         {
-                t = (unsigned char)A;
-                Temp[i] = (unsigned char)(t >> 4);
-                Temp[i + 1] = (unsigned char)(t % 16);
+            R[j] = 256*256*256*b[4*j] + 256*256*b[4*j + 1] + 256*b[4*j + 2] + b[4*j + 3];
         }
-        for (i=0; i<8 ; i+=2)
-        {
-                // 48+0 - '0', 87+10 - 'a'
-                str += Temp[7-i-1] < 10 ? (char)(Temp[7-i-1] + 48) : (char)(Temp[7-i-1] + 87);
-                str += Temp[7-i] < 10 ? (char)(Temp[7-i] + 48) : (char)(Temp[7-i] + 87);
+        hash_one(R, H0, H1, H2, H3, H4);
+    }
+    //оставшиеся блоки по ситуации
+    if (last_size < 56)
+    {
+        //Последний блок модифицируются
+        unsigned char buf[64];
+        //Читаем остатки файла и закрываем его
+        fread(buf, 1, last_size, ff);
+        fclose(ff);
+
+        //Дописываем биты заполнители
+        int it = last_size;
+        buf[it++] = 0x80;
+        for(int i = 0; i < zero_size - 1; buf[it++] = 0, i++);
+
+        //Дописываем длину в битах
+        quint64 bit_file_size = qToBigEndian(file_size*8);
+        for(int i = 0; i < 8; i++) {
+            buf[it++] = bit_file_size & 0xFF;
+            bit_file_size /= 256;
         }
-        delete []Temp;
-        return str;
+
+        //Хешируем последний блок - представляем его как массив int значений
+        for(int i = 0; i < 16; i++) {
+            R[i] = 256*256*256*buf[4*i] + 256*256*buf[4*i + 1] + 256*buf[4*i + 2] + buf[4*i + 3];
+        }
+        hash_one(R, H0, H1, H2, H3, H4);
+    }
+    else
+    {
+        //Последние 2 блока модифицируются
+        unsigned char buf[128];
+        //Читаем остатки файла и закрываем его
+        fread(buf, 1, last_size, ff);
+        fclose(ff);
+
+        //Дописываем биты заполнители
+        int it = last_size;
+        buf[it++] = 0x80;
+        for(int i = 0; i < zero_size - 1; buf[it++] = 0, i++);
+
+        //Дописываем длину в битах
+        quint64 bit_file_size = qToBigEndian(file_size*8);
+        for(int i = 0; i < 8; i++) {
+            buf[it++] = bit_file_size & 0xFF;
+            bit_file_size /= 256;
+        }
+
+        //Хешируем 1-й из последних блоков - представляем его как массив int значений
+        for(int i = 0; i < 16; i++) {
+            R[i] = 256*256*256*buf[4*i] + 256*256*buf[4*i + 1] + 256*buf[4*i + 2] + buf[4*i + 3];
+        }
+        hash_one(R, H0, H1, H2, H3, H4);
+
+        //Хешируем 2-й из последних блоков - представляем его как массив int значений
+        for(int i = 16; i < 32; i++) {
+            R[i - 16] = 256*256*256*buf[4*i] + 256*256*buf[4*i + 1] + 256*buf[4*i + 2] + buf[4*i + 3];
+        }
+        hash_one(R, H0, H1, H2, H3, H4);
+    }
+    //Выводим хеш
+    QString str = QString ("%1%2%3%4%5").arg(H0,-1,16).arg(H1,-1,16).arg(H2,-1,16).arg(H3,-1,16).arg(H4,-1,16);
+    return str;
 }
-
-
-
-
-
-
-

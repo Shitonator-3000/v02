@@ -1,13 +1,14 @@
-#include <string>
+#ifndef SHA_H
+#define SHA_H
+
+#include <QFile>
+#include <iostream>
+#include <QtEndian>
+
+#define SIZE_OF_BLOCK 64
+
 using namespace std;
-#ifndef HEADER_SHA_H
-#define HEADER_SHA_H
 
+QString sha1(char *name);
 
-string SHA1_MAIN(string text);
-unsigned int SHA1CircularShift(unsigned int X, int s);
-string SHA1IntToHex(unsigned int A);
-
-
-
-#endif
+#endif // SHA_H

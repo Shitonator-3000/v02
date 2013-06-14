@@ -1,9 +1,11 @@
 #include "mainwindow.h"
-
 #include <QFile>
 #include <QTime>
 
-char * QStringToCharStr(QString str) {
+using namespace std;
+
+char * QStringToCharStr(QString str)
+{
     char * charstr = new char [str.size()];
     string stdstr = str.toStdString();
     for (int i = 0; i < str.size(); i++) {
@@ -12,7 +14,8 @@ char * QStringToCharStr(QString str) {
     return charstr;
 }
 
-QString gen(unsigned int size)
+
+/*QString gen(unsigned int size)
 {
     QString str;
     unsigned char c[size];
@@ -89,5 +92,5 @@ QString FileToQString16( QString filename )
 
     return str;
 }
-
+*/
 
