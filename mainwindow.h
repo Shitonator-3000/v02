@@ -23,7 +23,7 @@ private slots:
     void openInput();
     void clickedMD5();
     void clickedSha1();
-    void clickedRipemd160();
+    void clickedRipemd();
 };
 
 QString MD5 (const QString);

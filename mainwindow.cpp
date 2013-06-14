@@ -18,7 +18,7 @@ MainWindow::MainWindow( QWidget *parent ) :
     connect(ui->pushFile, SIGNAL( clicked() ), SLOT( openInput() ));
     connect(ui->pushMD5, SIGNAL( clicked() ), SLOT( clickedMD5() ));
     connect(ui->pushSHA1, SIGNAL( clicked() ), SLOT( clickedSha1() ));
-    connect(ui->push160, SIGNAL( clicked() ), SLOT( clickedRipemd160() ));
+    connect(ui->push160, SIGNAL( clicked() ), SLOT( clickedRipemd() ));
 }
 
 
@@ -71,7 +71,7 @@ void MainWindow::clickedSha1()
 
 }
 
-void MainWindow::clickedRipemd160()
+void MainWindow::clickedRipemd()
 {
     ui->textBrowser->setVisible( true );
     QString str;
