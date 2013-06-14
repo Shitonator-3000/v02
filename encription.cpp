@@ -21,5 +21,5 @@ QString Sha1( const QString filename_i )
 
 QString Ripemd160( const QString filename_i )
 {
-    return ripemd160(filename_i.toUtf8().data());
+    return ripemd(filename_i.toUtf8().data());
 }
