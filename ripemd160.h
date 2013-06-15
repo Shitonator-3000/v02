@@ -10,6 +10,6 @@
 
 using namespace std;
 
-QString ripemd160(char *str);
+QString ripemd(char *str);
 
 #endif // RIPEMD_H
